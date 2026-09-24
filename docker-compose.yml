@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # Serviço do Back-End (API Python / FastAPI)
+  api:
+    build:
+      context: ../cozinha-solidaria-api # Caminho relativo para a pasta da API
+      dockerfile: Dockerfile
+    container_name: cozinha_solidaria_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persistência do banco de dados SQLite na máquina local
+      - ../cozinha-solidaria-api/database:/app/database
+    restart: always
+
+  # Serviço do Front-End (Nginx servindo a SPA)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cozinha_solidaria_web
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: always

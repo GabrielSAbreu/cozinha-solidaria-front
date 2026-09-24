@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cozinha Solidária</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./src/styles/styles.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+  <!-- Componente de Cabeçalho / Navegação -->
+  <app-header></app-header>
+
+  <!-- Container de Conteúdo da SPA -->
+  <main id="app-content" class="min-h-screen">
+    
+    <!-- Hero Section (Visão Geral) -->
+    <section class="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-8 items-center">
+      <div>
+        <span class="text-xs font-bold text-orange-600 uppercase tracking-wider">Iniciativa Social</span>
+        <h1 class="text-4xl font-extrabold text-gray-900 leading-tight mt-2">
+          Alimentando Vidas, Transformando Futuros.
+        </h1>
+        <p class="mt-4 text-gray-600 leading-relaxed">
+          Inscreva-se em oficinas gratuitas de culinária, técnicas de manipulação e aproveitamento integral dos alimentos. Aprenda novas habilidades para o mercado de trabalho.
+        </p>
+      </div>
+      <div class="bg-orange-100 rounded-3xl p-8 flex items-center justify-center text-8xl shadow-inner">
+      </div>
+    </section>
+
+    <!-- Lista de Oficinas & Cursos Disponíveis -->
+    <section id="cursos" class="max-w-6xl mx-auto px-4 py-8">
+      <div class="text-center max-w-xl mx-auto mb-10">
+        <span class="text-xs font-bold text-orange-600 uppercase tracking-wider">Aprenda Connosco</span>
+        <h2 class="text-2xl font-bold text-gray-800">Oficinas & Cursos Disponíveis</h2>
+        <p class="text-xs text-gray-500 mt-1">100% gratuitos. Garanta a sua vaga!</p>
+      </div>
+
+      <!-- Container onde os <curso-card> serão inseridos -->
+      <div id="grid-cursos" class="grid md:grid-cols-3 gap-6">
+        <p class="col-span-full text-center text-gray-400 py-8">A carregar oficinas disponíveis...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Web Components Globais -->
+  <app-modal></app-modal>
+  <app-footer></app-footer>
+
+  <!-- Script ES Module para Registar os Web Components e Inicializar os Cursos -->
+  <script type="module">
+    // 1. Importação de todos os Web Components para registo no browser
+    import './src/components/header.js';
+    import './src/components/card.js';
+    import './src/components/modal.js';
+    import './src/components/footer.js';
+    import './src/components/admin.js';
+
+    // 2. Importação do serviço API para buscar a lista de cursos
+    import { getCursos } from './src/services/api.js';
+
+    // 3. Função para renderizar os cards na Landing Page
+    async function carregarOficinas() {
+      const container = document.getElementById('grid-cursos');
+      if (!container) return;
+
+      try {
+        const cursos = await getCursos();
+
+        if (!cursos || cursos.length === 0) {
+          container.innerHTML = `<p class="col-span-full text-center text-gray-500 py-8">Nenhuma oficina disponível de momento.</p>`;
+          return;
+        }
+
+        // Limpa o loader
+        container.innerHTML = '';
+
+        // Instancia o Web Component <curso-card> para cada curso recebido da API
+        cursos.forEach(curso => {
+          const cardElement = document.createElement('curso-card');
+          cardElement.data = curso; // Passa o objeto do curso para a propriedade data
+          container.appendChild(cardElement);
+        });
+      } catch (error) {
+        console.error("Erro ao carregar oficinas:", error);
+        container.innerHTML = `<p class="col-span-full text-center text-red-500 py-8">Erro ao ligar à API. Certifique-se de que o back-end está a rodar na porta 8000.</p>`;
+      }
+    }
+
+    // Executa o carregamento das oficinas assim que o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', carregarOficinas);
+  </script>
+</body>
+</html>

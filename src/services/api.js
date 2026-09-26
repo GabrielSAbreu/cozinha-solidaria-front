@@ -17,6 +17,87 @@ export async function getCursos() {
   }
 }
 
+export async function getBeneficios() {
+  try {
+    const response = await fetch(`${API_URL}/beneficios`);
+    if (!response.ok) throw new Error(`Erro ao buscar benefícios: ${response.statusText}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Erro no serviço getBeneficios:", error);
+    return [];
+  }
+}
+
+export async function getAlunos(idUsuario) {
+  try {
+    const response = await fetch(`${API_URL}/usuarios/alunos`, {
+      headers: { 'X-User-Id': String(idUsuario) }
+    });
+    if (!response.ok) throw new Error(`Erro ao buscar alunos: ${response.statusText}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Erro no serviço getAlunos:", error);
+    return [];
+  }
+}
+
+export async function getBeneficiosUsuario(idUsuario) {
+  try {
+    const response = await fetch(`${API_URL}/beneficios/usuario/${idUsuario}`, {
+      headers: { 'X-User-Id': String(idUsuario) }
+    });
+    if (!response.ok) throw new Error(`Erro ao buscar benefícios: ${response.statusText}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Erro no serviço getBeneficiosUsuario:", error);
+    return [];
+  }
+}
+
+export async function cadastrarCurso(dadosCurso, userId) {
+  return fetch(`${API_URL}/cursos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': String(userId)
+    },
+    body: JSON.stringify(dadosCurso)
+  });
+}
+
+export async function cadastrarBeneficio(dadosBeneficio, userId) {
+  return fetch(`${API_URL}/beneficios`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': String(userId)
+    },
+    body: JSON.stringify(dadosBeneficio)
+  });
+}
+
+export async function editarCurso(idCurso, dadosCurso, userId) {
+  return fetch(`${API_URL}/cursos/${idCurso}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': String(userId)
+    },
+    body: JSON.stringify(dadosCurso)
+  });
+}
+
+export async function editarBeneficio(idBeneficio, dadosBeneficio, userId) {
+  return fetch(`${API_URL}/beneficios/${idBeneficio}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': String(userId)
+    },
+    body: JSON.stringify(dadosBeneficio)
+  });
+}
+
 /**
  * Realiza o cadastro de um novo aluno (inscrição na oficina).
  * @param {Object} dadosAluno - Objeto com os dados do formulário (nome, email, telefone, endereço, etc).
@@ -31,12 +112,65 @@ export async function cadastrarAluno(dadosAluno) {
       },
       body: JSON.stringify({
         ...dadosAluno,
-        tipo_usuario: 'aluno' // Força o perfil para aluno conforme as regras do RBAC
+        tipo_usuario: dadosAluno.tipo_usuario || 'aluno'
       })
     });
     return response;
   } catch (error) {
     console.error("Erro no serviço cadastrarAluno:", error);
+    throw error;
+  }
+}
+
+export async function loginUsuario(email, senha) {
+  try {
+    const response = await fetch(`${API_URL}/usuarios/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, senha })
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro no serviço loginUsuario:", error);
+    throw error;
+  }
+}
+
+export async function getInscricoesUsuario(idUsuario) {
+  try {
+    const response = await fetch(`${API_URL}/cursos/inscricoes/${idUsuario}`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Erro ao buscar inscrições do usuário:", error);
+    return [];
+  }
+}
+
+export async function inscreverCurso(idCurso, idUsuario) {
+  return fetch(`${API_URL}/cursos/${idCurso}/inscricao`, {
+    method: 'POST',
+    headers: {
+      'X-User-Id': String(idUsuario)
+    }
+  });
+}
+
+export async function cadastrarAdmin(dadosAdmin, userId) {
+  try {
+    const response = await fetch(`${API_URL}/usuarios/admin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': String(userId)
+      },
+      body: JSON.stringify({ ...dadosAdmin, tipo_usuario: 'admin' })
+    });
+    return response;
+  } catch (error) {
+    console.error("Erro no serviço cadastrarAdmin:", error);
     throw error;
   }
 }

@@ -1,3 +1,6 @@
+import { getInscricoesUsuario, inscreverCurso } from '../services/api.js';
+import { getUsuarioLogado, podeInscrever } from '../services/auth.js';
+
 export class CursoCard extends HTMLElement {
   set data(curso) {
     this._curso = curso;
@@ -7,7 +10,12 @@ export class CursoCard extends HTMLElement {
   render() {
     if (!this._curso) return;
 
-    const { id, nome, descricao, vagas, horario, dia_semana } = this._curso;
+    const id = this._curso.id_curso ?? this._curso.id;
+    const nome = this._curso.nome_curso ?? this._curso.nome;
+    const { descricao, vagas, horario, data_inicio } = this._curso;
+    const dataInicioFormatada = data_inicio
+      ? new Date(`${data_inicio}T00:00:00`).toLocaleDateString('pt-BR')
+      : 'A definir';
 
     this.innerHTML = `
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col justify-between p-5">
@@ -22,9 +30,7 @@ export class CursoCard extends HTMLElement {
           <p class="text-gray-500 text-xs mb-4 line-clamp-2">${descricao || 'Capacitação prática e gratuita para a comunidade.'}</p>
           
           <div class="text-xs text-gray-600 space-y-1 mb-4">
-            <p>🗓️ <strong>Dia:</strong> ${dia_semana || 'A definir'}</p>
-            <p>⏰ <strong>Horário:</strong> ${horario || 'A definir'}</p>
-            <p>👥 <strong>Vagas Restantes:</strong> ${vagas ?? 'Ilimitadas'}</p>
+            <p>🗓️ <strong>Data de início:</strong> ${dataInicioFormatada}</p>
           </div>
         </div>
 
@@ -34,10 +40,60 @@ export class CursoCard extends HTMLElement {
       </div>
     `;
 
-    this.querySelector('.btn-garantir-vaga').addEventListener('click', () => {
-      const modal = document.querySelector('app-modal');
-      if (modal) modal.abrir(nome);
+    const button = this.querySelector('.btn-garantir-vaga');
+    button.addEventListener('click', async () => {
+      if (!podeInscrever()) {
+        document.querySelector('app-modal')?.abrirLogin();
+        return;
+      }
+      if (this._inscrito) return;
+
+      button.disabled = true;
+      button.textContent = 'Inscrevendo...';
+      try {
+        const usuario = getUsuarioLogado();
+        const response = await inscreverCurso(id, usuario.id_usuario);
+        if (!response.ok) {
+          const erro = await response.json().catch(() => ({}));
+          throw new Error(erro.detail || 'Não foi possível garantir a vaga.');
+        }
+        this._inscrito = true;
+        this.atualizarPermissao();
+      } catch (error) {
+        alert(error.message);
+        button.disabled = false;
+        this.atualizarPermissao();
+      }
     });
+    this.atualizarPermissao();
+    this.carregarInscricao();
+    window.addEventListener('usuario-alterado', () => this.atualizarPermissao());
+  }
+
+  atualizarPermissao() {
+    const button = this.querySelector('.btn-garantir-vaga');
+    if (!button) return;
+    const autenticado = Boolean(getUsuarioLogado());
+    const aluno = podeInscrever();
+    button.disabled = this._inscrito;
+    button.textContent = this._inscrito ? 'Inscrito' : aluno ? 'Garantir Minha Vaga' : autenticado ? 'Disponível apenas para alunos' : 'Entrar para se inscrever';
+    button.classList.remove('bg-gray-400', 'hover:bg-orange-700', 'bg-emerald-600', 'hover:bg-emerald-700');
+    if (this._inscrito) {
+      button.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+    } else if (aluno) {
+      button.classList.add('hover:bg-orange-700');
+    } else {
+      button.classList.add('bg-gray-400');
+    }
+  }
+
+  async carregarInscricao() {
+    this._inscrito = false;
+    const usuario = getUsuarioLogado();
+    if (!podeInscrever() || !usuario) return;
+    const inscricoes = await getInscricoesUsuario(usuario.id_usuario);
+    this._inscrito = inscricoes.includes(this._curso.id_curso ?? this._curso.id);
+    this.atualizarPermissao();
   }
 }
 

@@ -26,14 +26,18 @@ export class BeneficiarioDashboard extends HTMLElement {
       tabela.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-gray-400">Nenhum benefício disponível.</td></tr>';
       return;
     }
-    tabela.innerHTML = beneficios.map(beneficio => `
-      <tr class="border-b last:border-b-0">
-        <td class="py-3 px-4 font-semibold text-gray-800">${beneficio.nome_beneficio}</td>
-        <td class="py-3 px-4 text-gray-600">${beneficio.descricao}</td>
-        <td class="py-3 px-4 text-gray-600">${beneficio.data_entrega}</td>
-        <td class="py-3 px-4"><span class="inline-block px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">${beneficio.status}</span></td>
-      </tr>
-    `).join('');
+    tabela.innerHTML = beneficios.map(beneficio => {
+      const [ano, mes, dia] = beneficio.data_entrega.split('-');
+      const dataFormatada = `${dia}/${mes}/${ano}`;
+      return `
+        <tr class="border-b last:border-b-0">
+          <td class="py-3 px-4 font-semibold text-gray-800">${beneficio.nome_beneficio}</td>
+          <td class="py-3 px-4 text-gray-600">${beneficio.descricao}</td>
+          <td class="py-3 px-4 text-gray-600">${dataFormatada}</td>
+          <td class="py-3 px-4"><span class="inline-block px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">${beneficio.status}</span></td>
+        </tr>
+      `;
+    }).join('');
   }
 }
 

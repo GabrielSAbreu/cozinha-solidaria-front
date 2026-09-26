@@ -195,3 +195,17 @@ export async function deletarCurso(idCurso, userId) {
     throw error;
   }
 }
+
+export async function deletarUsuario(idUsuario, userId) {
+  try {
+    return await fetch(`${API_URL}/usuarios/${idUsuario}`, {
+      method: 'DELETE',
+      headers: {
+        'X-User-Id': String(userId)
+      }
+    });
+  } catch (error) {
+    console.error("Erro no serviço deletarUsuario:", error);
+    throw error;
+  }
+}

@@ -3,6 +3,7 @@ import {
   cadastrarCurso,
   editarBeneficio,
   editarCurso,
+  deletarUsuario,
   getBeneficios,
   getAlunos,
   getCursos,
@@ -69,9 +70,9 @@ export class AdminDashboard extends HTMLElement {
           <h2 class="text-lg font-bold text-gray-800 mb-4">Alunos e inscrições</h2>
           <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
             <thead><tr class="border-b text-xs font-semibold text-gray-500 uppercase">
-              <th class="py-3 px-2">Nome</th><th class="py-3 px-2">Idade</th><th class="py-3 px-2">Cidade</th><th class="py-3 px-2">Curso inscrito</th>
+              <th class="py-3 px-2">Nome</th><th class="py-3 px-2">Idade</th><th class="py-3 px-2">Cidade</th><th class="py-3 px-2">Curso inscrito</th><th class="py-3 px-2 text-right">Ações</th>
             </tr></thead>
-            <tbody id="tabela-alunos" class="text-sm divide-y"><tr><td colspan="4" class="py-4 text-center text-gray-400">Carregando alunos...</td></tr></tbody>
+            <tbody id="tabela-alunos" class="text-sm divide-y"><tr><td colspan="5" class="py-4 text-center text-gray-400">Carregando alunos...</td></tr></tbody>
           </table></div>
         </div>
         </section>
@@ -321,14 +322,36 @@ export class AdminDashboard extends HTMLElement {
     const alunos = await getAlunos(getUsuarioLogado().id_usuario);
     this.querySelector('#total-alunos-stat').textContent = alunos.length;
     if (!alunos.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-400">Nenhum aluno cadastrado.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-400">Nenhum aluno cadastrado.</td></tr>';
       return;
     }
     tbody.innerHTML = alunos.map(aluno => `
       <tr><td class="py-3 px-2 font-semibold text-gray-800">${aluno.nome}</td>
       <td class="py-3 px-2">${aluno.idade} anos</td><td class="py-3 px-2">${aluno.cidade}</td>
-      <td class="py-3 px-2">${aluno.curso}</td></tr>
+      <td class="py-3 px-2">${aluno.curso}</td>
+      <td class="py-3 px-2 text-right"><button type="button" data-id="${aluno.id_usuario}" title="Excluir usuário" aria-label="Excluir usuário" class="btn-deletar-usuario text-red-600 hover:text-red-800 text-lg px-2"><svg aria-hidden="true" focusable="false" viewBox="0 0 640 640" width="18" height="18" class="inline-block align-middle fill-current"><path d="M232.7 69.9L224 96L128 96C110.3 96 96 110.3 96 128C96 145.7 110.3 160 128 160L512 160C529.7 160 544 145.7 544 128C544 110.3 529.7 96 512 96L416 96L407.3 69.9C402.9 56.8 390.7 48 376.9 48L263.1 48C249.3 48 237.1 56.8 232.7 69.9zM512 208L128 208L149.1 531.1C150.7 556.4 171.7 576 197 576L443 576C468.3 576 489.3 556.4 490.9 531.1L512 208z"/></svg></button></td></tr>
     `).join('');
+
+    this.querySelectorAll('.btn-deletar-usuario').forEach(button => {
+      button.addEventListener('click', async event => {
+        const idUsuario = event.currentTarget.dataset.id;
+        if (!confirm(`Confirma a exclusão do usuário ID ${idUsuario}?`)) return;
+
+        try {
+          const usuarioLogado = getUsuarioLogado();
+          const response = await deletarUsuario(idUsuario, usuarioLogado.id_usuario);
+          if (!response.ok) {
+            const erro = await response.json().catch(() => ({}));
+            alert(erro.detail || 'Não foi possível excluir o usuário.');
+            return;
+          }
+          alert('Usuário excluído com sucesso!');
+          await this.carregarAlunos();
+        } catch (error) {
+          alert('Não foi possível conectar ao servidor.');
+        }
+      });
+    });
   }
 }
 

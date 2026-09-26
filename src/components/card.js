@@ -12,7 +12,7 @@ export class CursoCard extends HTMLElement {
 
     const id = this._curso.id_curso ?? this._curso.id;
     const nome = this._curso.nome_curso ?? this._curso.nome;
-    const { descricao, vagas, horario, data_inicio } = this._curso;
+    const { descricao, vagas, horario, data_inicio, imagem_url } = this._curso;
     const dataInicioFormatada = data_inicio
       ? new Date(`${data_inicio}T00:00:00`).toLocaleDateString('pt-BR')
       : 'A definir';
@@ -20,7 +20,7 @@ export class CursoCard extends HTMLElement {
     this.innerHTML = `
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden flex flex-col justify-between p-5">
         <div>
-          <div class="h-40 bg-orange-100 rounded-xl mb-4 flex items-center justify-center text-4xl">
+          <div class="course-image h-40 bg-orange-100 rounded-xl mb-4 flex items-center justify-center text-4xl overflow-hidden">
             👨‍🍳
           </div>
           <span class="inline-block px-2.5 py-1 bg-orange-50 text-orange-600 text-xs font-semibold rounded-full mb-2">
@@ -39,6 +39,28 @@ export class CursoCard extends HTMLElement {
         </button>
       </div>
     `;
+
+    const imageContainer = this.querySelector('.course-image');
+    if (imagem_url) {
+      let imageUrl;
+      try {
+        imageUrl = new URL(imagem_url, window.location.href);
+      } catch {
+        imageUrl = null;
+      }
+
+      if (imageUrl && ['http:', 'https:'].includes(imageUrl.protocol)) {
+        const image = new Image();
+        image.alt = `Imagem do curso ${nome}`;
+        image.className = 'h-full w-full object-cover';
+        image.addEventListener('error', () => {
+          image.remove();
+          imageContainer.textContent = '👨‍🍳';
+        }, { once: true });
+        imageContainer.replaceChildren(image);
+        image.src = imageUrl.href;
+      }
+    }
 
     const button = this.querySelector('.btn-garantir-vaga');
     button.addEventListener('click', async () => {

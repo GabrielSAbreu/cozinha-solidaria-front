@@ -92,6 +92,9 @@ export class AdminDashboard extends HTMLElement {
               <label class="block text-sm font-medium text-gray-700">Data de início
                 <input type="date" name="data_inicio" required class="w-full border rounded-lg p-2 mt-1">
               </label>
+              <label class="block text-sm font-medium text-gray-700">URL da imagem do curso (opcional)
+                <input type="url" name="imagem_url" maxlength="2048" class="w-full border rounded-lg p-2 mt-1" placeholder="https://exemplo.com/imagem.jpg">
+              </label>
               <div class="flex gap-2">
                 <button type="submit" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg">Cadastrar curso</button>
                 <button type="button" id="btn-cancelar-edicao-curso" class="hidden px-4 border rounded-lg text-gray-600 hover:bg-gray-100">Cancelar</button>
@@ -200,6 +203,7 @@ export class AdminDashboard extends HTMLElement {
     form.elements.nome_curso.value = curso.nome_curso;
     form.elements.carga_horaria.value = curso.carga_horaria;
     form.elements.data_inicio.value = curso.data_inicio || '';
+    form.elements.imagem_url.value = curso.imagem_url || '';
     form.querySelector('button[type="submit"]').textContent = 'Salvar alterações';
     this.querySelector('#btn-cancelar-edicao-curso').classList.remove('hidden');
     this.mostrarAba('cadastros');
@@ -276,12 +280,8 @@ export class AdminDashboard extends HTMLElement {
 
       this.querySelectorAll('.btn-editar-curso').forEach(btn => {
         btn.addEventListener('click', async () => {
-          this.editarCursoNoFormulario({
-            id_curso: btn.dataset.id,
-            nome_curso: btn.dataset.nome,
-            carga_horaria: btn.dataset.carga,
-            data_inicio: btn.dataset.data
-          });
+          const curso = cursos.find(item => String(item.id_curso) === btn.dataset.id);
+          if (curso) this.editarCursoNoFormulario(curso);
         });
       });
     } catch (err) {

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Serviço do Back-End (API Python / FastAPI)
   api:
